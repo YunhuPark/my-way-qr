@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>내 방식 QR - 프로필 만들기</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="site">
+  <h1>내 방식 QR</h1>
+  <p>내가 편한 화면 방식을 QR 하나에 담아, 키오스크에서 찍으면 내 방식으로 바꿔 줍니다.</p>
+</header>
+<main>
+  <section class="card" aria-labelledby="h-say">
+    <h2 id="h-say">1. 말로 알려주세요</h2>
+    <textarea id="say" placeholder="예) 글씨는 크게, 어려운 말은 쉽게 바꿔 주세요. 천천히 하나씩 보고 싶어요."></textarea>
+    <div class="row">
+      <button class="primary" id="ai">AI로 설정하기</button>
+      <span class="badge" id="src" hidden></span>
+    </div>
+    <p class="hint">입력한 말에서 <b>화면 선호</b>만 뽑아냅니다. 건강·장애 정보는 묻지도, 저장하지도 않습니다.</p>
+    <p class="hint">입력한 문장은 AI 처리를 위해 외부 AI 서비스로 전송될 수 있습니다. 이름·연락처 같은 개인정보는 적지 마세요.</p>
+  </section>
+
+  <section class="card" aria-labelledby="h-set">
+    <h2 id="h-set">2. 직접 고르기</h2>
+    <label for="fs">글자 크기</label>
+    <select id="fs">
+      <option value="1">보통</option>
+      <option value="1.4">크게</option>
+      <option value="1.8">아주 크게</option>
+      <option value="2.2">가장 크게</option>
+    </select>
+    <label class="opt"><input type="checkbox" id="ez"> 어려운 말을 쉬운 말로</label>
+    <label class="opt"><input type="checkbox" id="hc"> 글씨가 또렷하게 (고대비)</label>
+    <label class="opt"><input type="checkbox" id="vo"> 소리로 읽어 주기</label>
+    <label class="opt"><input type="checkbox" id="st"> 한 번에 한 단계씩 보기</label>
+    <label class="opt"><input type="checkbox" id="tm"> 넉넉한 시간 (제한 시간 연장)</label>
+  </section>
+
+  <section class="card" aria-labelledby="h-pre">
+    <h2 id="h-pre">미리보기</h2>
+    <div class="screen" id="pre" aria-live="polite">
+      <h3>본인 확인을 위해 신분증을 인식기에 접촉하십시오.</h3>
+      <div class="choices"><button class="choice" aria-pressed="true">신분증 인식 시작</button><button class="choice" aria-pressed="false">지문 인증으로 대체</button></div>
+    </div>
+  </section>
+
+  <section class="card qrbox" aria-labelledby="h-qr">
+    <h2 id="h-qr">3. 내 QR</h2>
+    <img id="qr" alt="내 방식 QR 코드. 키오스크 체험 화면으로 연결됩니다.">
+    <div class="row" style="justify-content:center">
+      <a id="go" href="#"><button class="primary" type="button">이 설정으로 키오스크 체험</button></a>
+    </div>
+    <p class="hint">휴대폰 카메라로 찍으면 같은 설정으로 열립니다. (PC와 같은 Wi-Fi여야 합니다.)</p>
+    <code id="link"></code>
+  </section>
+</main>
+
+<script src="/profile.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+let profile = { ...DEFAULT_PROFILE };
+let base = location.origin;
+fetch("/api/base").then(r => r.json()).then(j => { base = j.base; refresh(); }).catch(() => {});
+
+function readControls() {
+  profile = { fs: Number($("fs").value), ez: $("ez").checked, hc: $("hc").checked, vo: $("vo").checked, st: $("st").checked, tm: $("tm").checked };
+}
+function writeControls() {
+  $("fs").value = String(profile.fs);
+  for (const k of ["ez", "hc", "vo", "st", "tm"]) $(k).checked = profile[k];
+}
+function refresh() {
+  const pre = $("pre");
+  pre.style.setProperty("--fs", profile.fs);
+  pre.classList.toggle("hc", profile.hc);
+  const url = `${base}/kiosk.html?p=${encodeProfile(profile)}`;
+  $("qr").src = `/api/qr?url=${encodeURIComponent(url)}`;
+  $("link").textContent = url;
+  $("go").href = `/kiosk.html?p=${encodeProfile(profile)}`;
+}
+for (const id of ["fs", "ez", "hc", "vo", "st", "tm"]) $(id).addEventListener("change", () => { readControls(); refresh(); });
+
+$("ai").addEventListener("click", async () => {
+  const text = $("say").value.trim();
+  if (!text) return;
+  $("ai").disabled = true;
+  try {
+    const r = await fetch("/api/profile/parse", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
+    const j = await r.json();
+    profile = { ...DEFAULT_PROFILE, ...j.profile };
+    writeControls(); refresh();
+    $("src").hidden = false;
+    $("src").textContent = j.source === "ai" ? "AI가 설정했어요" : "기본 규칙으로 설정했어요 (AI 키 없음)";
+  } finally {
+    $("ai").disabled = false;
+  }
+});
+writeControls(); refresh();
+</script>
+</body>
+</html>

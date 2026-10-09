@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>모의 키오스크 - 내 방식 QR</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="kiosk-wrap">
+  <p class="hint"><a href="/">&larr; 프로필 만들기</a> · 시연용 모의 키오스크입니다. 실제 결제·발급은 되지 않습니다.</p>
+  <div class="tabs" id="tabs" role="group" aria-label="체험할 키오스크"></div>
+  <div class="mode" id="mode" role="group" aria-label="화면 방식"></div>
+  <div id="testpanel" class="card" hidden></div>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <div class="screen" id="screen" aria-live="polite"></div>
+</div>
+
+<script src="/profile.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const myProfile = decodeProfile(new URLSearchParams(location.search).get("p"));
+let data, scKey = "cafe", mode = myProfile ? "mine" : "plain";
+let answers = [], stepIdx = 0, left = 0, timerId = null;
+const easy = {};   // 원문 -> 쉬운 말
+let easySource = "";
+
+// ---- 사용자 테스트 기록 (?test=1 일 때만 동작, 기록은 이 기기의 브라우저에만 저장) ----
+const qs = new URLSearchParams(location.search);
+const TEST = qs.get("test") === "1";
+let run = null;   // 진행 중인 과업 기록
+const store = {
+  get() { try { return JSON.parse(localStorage.getItem("mwqr_runs") || "[]"); } catch { return []; } },
+  set(v) { try { localStorage.setItem("mwqr_runs", JSON.stringify(v)); } catch { /* 저장 불가 시 CSV로만 */ } },
+};
+
+const profile = () => (mode === "mine" && myProfile ? myProfile : DEFAULT_PROFILE);
+const limit = () => (profile().tm ? 120 : 30);
+const isDone = () => data.scenarios[scKey].steps.every((_, i) => answers[i] !== undefined);
+const txt = (o) => (profile().ez ? (easy[o.t] ?? o.e) : o.t);
+
+function allTexts(sc) {
+  const out = [sc.final, ...Object.values(data.ui)];
+  for (const s of sc.steps) out.push(s.q, ...s.opts);
+  return out.map((o) => o.t);
+}
+
+async function ensureEasy() {
+  if (!profile().ez) return;
+  const need = allTexts(data.scenarios[scKey]).filter((t) => !(t in easy));
+  if (!need.length) return;
+  try {
+    const r = await fetch("/api/rewrite", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ texts: need }) });
+    const j = await r.json();
+    Object.assign(easy, j.results);
+    easySource = j.source === "ai" ? "AI가 쉬운 말로 바꿨어요" : "미리 만들어 둔 쉬운 말 사전을 썼어요";
+  } catch { /* 원문 사전본(o.e)으로 대체 */ }
+}
+
+function speak(text) {
+  if (!profile().vo || !("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "ko-KR"; u.rate = 0.9;
+  speechSynthesis.speak(u);
+}
+
+function resetTimer() { left = limit(); tick(false); }
+function tick(dec = true) {
+  const t = document.querySelector(".timer");
+  const done = isDone();
+  if (dec) left -= 1;
+  if (done) { if (t) t.hidden = true; return; }
+  if (left <= 0) {
+    answers = []; stepIdx = 0; left = limit();
+    if (run) run.timeouts += 1;
+    showToast("시간이 지나서 처음 화면으로 돌아갔어요. (실제 키오스크에서 흔히 겪는 일입니다.)");
+    render(); return;
+  }
+  if (t) { t.hidden = false; t.textContent = `${left}초 후 처음 화면으로 돌아갑니다`; t.classList.toggle("low", left <= 10); }
+}
+function showToast(msg) { const el = $("toast"); el.textContent = msg; el.hidden = false; setTimeout(() => (el.hidden = true), 5000); }
+
+function choose(i, opt) {
+  answers[i] = opt;
+  const next = data.scenarios[scKey].steps.findIndex((_, k) => answers[k] === undefined);
+  stepIdx = next === -1 ? data.scenarios[scKey].steps.length : next;
+  if (run) {
+    run.selections.push(`${i + 1}:${opt}`);
+    if (opt !== data.scenarios[scKey].target[i]) run.wrong += 1;
+    if (isDone()) finishRun(run.helps > 0 ? "assisted" : "success");
+  }
+  resetTimer(); render(true);
+}
+
+function stepBlock(sc, i, big) {
+  const s = sc.steps[i];
+  const q = h("p", { class: "q" }, txt(s.q));
+  const choices = h("div", { class: "choices" }, s.opts.map((o, k) =>
+    h("button", { class: "choice", "aria-pressed": String(answers[i] === k), onclick: () => choose(i, k) }, txt(o))));
+  return h("div", {}, big ? h("h3", { tabindex: "-1", id: "focus-me" }, txt(s.q)) : q, choices);
+}
+
+function render(speakNow = false) {
+  const p = profile(), sc = data.scenarios[scKey], el = $("screen");
+  el.style.setProperty("--fs", p.fs);
+  el.className = "screen" + (p.hc ? " hc" : "") + (p.st ? " step" : "") + (mode === "plain" ? " plain" : "");
+  el.replaceChildren();
+  const finished = isDone();
+  el.append(h("div", { class: "timer", hidden: finished }));
+  el.append(h("h3", {}, sc.title));
+  const spoken = [];
+
+  if (p.st) {
+    if (finished) {
+      el.append(h("div", { class: "final" }, txt(sc.final)));
+      spoken.push(txt(sc.final));
+    } else {
+      const i = stepIdx;
+      el.append(h("p", { class: "hint" }, `${i + 1} / ${sc.steps.length} 단계`));
+      el.append(stepBlock(sc, i, true));
+      spoken.push(txt(sc.steps[i].q), ...sc.steps[i].opts.map(txt));
+    }
+    const actions = h("div", { class: "actions" });
+    if (stepIdx > 0 && !finished) actions.append(h("button", { class: "nav", onclick: () => { if (run) run.backs += 1; stepIdx -= 1; answers.length = stepIdx; resetTimer(); render(true); } }, txt(data.ui.back)));
+    if (finished) actions.append(h("button", { class: "nav primary", onclick: restart }, txt(data.ui.restart)));
+    el.append(actions);
+  } else {
+    sc.steps.forEach((_, i) => el.append(stepBlock(sc, i, false)));
+    if (finished) { el.append(h("div", { class: "final" }, txt(sc.final))); }
+    if (finished) el.append(h("div", { class: "actions" }, h("button", { class: "nav primary", onclick: restart }, txt(data.ui.restart))));
+  }
+  if (p.vo) {
+    const all = spoken.length ? spoken : [sc.title];
+    el.append(h("div", { class: "actions" }, h("button", { class: "nav", onclick: () => speak(all.join(". ")) }, "🔊 " + txt(data.ui.listen))));
+    if (speakNow) speak(all.join(". "));
+  }
+  if (p.ez && easySource) el.append(h("p", { class: "timer" }, easySource));
+  tick(false);
+  document.getElementById("focus-me")?.focus({ preventScroll: true });
+}
+
+function restart() { answers = []; stepIdx = 0; resetTimer(); render(); }
+
+function drawTabs() {
+  $("tabs").replaceChildren(...Object.entries(data.scenarios).map(([k, s]) =>
+    h("button", { "aria-pressed": String(k === scKey), disabled: !!run, onclick: async () => { scKey = k; answers = []; stepIdx = 0; drawTabs(); await ensureEasy(); resetTimer(); render(); } }, s.title)));
+}
+function drawMode() {
+  const btn = (m, label) => h("button", { "aria-pressed": String(mode === m), class: mode === m ? "primary" : "", disabled: !!run, onclick: async () => { mode = m; answers = []; stepIdx = 0; drawMode(); await ensureEasy(); resetTimer(); render(); } }, label);
+  $("mode").replaceChildren(btn("plain", "기본 화면"), btn("mine", myProfile ? "내 방식 화면" : "내 방식 화면 (QR 없음)"));
+  if (!myProfile) $("mode").lastChild.disabled = true;
+}
+
+// ---- 테스트 패널 (진행자용) ----
+const CSV_COLS = ["run_id", "pid", "scenario", "mode", "start", "duration_sec", "result", "wrong", "backs", "timeouts", "helps", "selections"];
+const RESULT_KO = { success: "성공", assisted: "도움받음", failed: "실패" };
+
+function startRun() {
+  const pid = ($("pid")?.value || "").trim() || "P?";
+  try { localStorage.setItem("mwqr_pid", pid); } catch { /* 무시 */ }
+  answers = []; stepIdx = 0;
+  run = { pid, scenario: scKey, mode, startIso: new Date().toISOString(), t0: performance.now(), wrong: 0, backs: 0, timeouts: 0, helps: 0, selections: [] };
+  drawTabs(); drawMode(); resetTimer(); render(); renderPanel();
+}
+
+function finishRun(result) {
+  if (!run) return;
+  const rows = store.get();
+  rows.push({
+    run_id: rows.length + 1, pid: run.pid, scenario: run.scenario, mode: run.mode, start: run.startIso,
+    duration_sec: Math.round((performance.now() - run.t0) / 100) / 10, result,
+    wrong: run.wrong, backs: run.backs, timeouts: run.timeouts, helps: run.helps, selections: run.selections.join("|"),
+  });
+  store.set(rows);
+  run = null;
+  drawTabs(); drawMode(); renderPanel();
+}
+
+function downloadCsv() {
+  const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const lines = [CSV_COLS.join(","), ...store.get().map((r) => CSV_COLS.map((c) => esc(r[c])).join(","))];
+  const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+  const a = h("a", { href: URL.createObjectURL(blob), download: "usertest.csv" });
+  document.body.append(a); a.click(); a.remove();
+}
+
+function renderPanel() {
+  if (!TEST) return;
+  const panel = $("testpanel");
+  panel.hidden = false;
+  const sc = data.scenarios[scKey];
+  const rows = store.get();
+  let lastPid = qs.get("pid") || "";
+  try { lastPid = lastPid || localStorage.getItem("mwqr_pid") || ""; } catch { /* 무시 */ }
+  const pidVal = run ? run.pid : ($("pid")?.value || lastPid);
+  panel.replaceChildren(
+    h("h2", {}, "사용자 테스트 기록 (진행자용)"),
+    h("p", { class: "hint" }, "기록은 이 기기의 브라우저에만 저장됩니다. 참가자는 P1, P2처럼 코드로만 입력하세요."),
+    h("div", { class: "row" },
+      h("label", { for: "pid" }, "참가자 코드"),
+      h("input", { id: "pid", value: pidVal, disabled: !!run, size: "6", style: "padding:6px;font:inherit" })),
+    h("p", {}, h("b", {}, "과업 카드: "), sc.task, ` (현재: ${sc.title} / ${mode === "mine" ? "내 방식 화면" : "기본 화면"})`),
+    h("div", { class: "row" },
+      !run ? h("button", { class: "primary", onclick: startRun }, "과업 시작 (기록 시작)") : null,
+      run ? h("button", { onclick: () => { run.helps += 1; renderPanel(); } }, `도움·힌트 준 횟수 +1 (${run.helps})`) : null,
+      run ? h("button", { onclick: () => finishRun("failed") }, "중단 (실패로 기록)") : null),
+    run ? h("p", { class: "hint" }, "진행 중: 완료 화면이 뜨면 자동으로 종료·저장됩니다.") : null,
+    h("div", { class: "row" },
+      h("button", { onclick: downloadCsv }, `CSV 내려받기 (${rows.length}건)`),
+      h("button", { onclick: () => { if (!run && confirm("이 기기의 테스트 기록을 모두 지울까요?")) { store.set([]); renderPanel(); } } }, "기록 지우기")),
+    rows.length ? h("table", { style: "width:100%;border-collapse:collapse;font-size:.85rem;margin-top:8px" },
+      h("tr", {}, ["코드", "과업", "화면", "시간(초)", "결과", "오선택", "뒤로", "초과", "도움"].map((t) => h("th", { style: "text-align:left;border-bottom:1px solid #ccc" }, t))),
+      rows.slice(-6).map((r) => h("tr", {}, [r.pid, data.scenarios[r.scenario].title, r.mode === "mine" ? "내 방식" : "기본", r.duration_sec, RESULT_KO[r.result], r.wrong, r.backs, r.timeouts, r.helps].map((v) => h("td", { style: "padding:2px 6px 2px 0" }, String(v)))))) : null,
+  );
+}
+
+(async () => {
+  data = await (await fetch("/api/scenarios")).json();
+  drawTabs(); drawMode(); renderPanel();
+  await ensureEasy();
+  resetTimer(); render();
+  setInterval(() => tick(true), 1000);
+})();
+</script>
+</body>
+</html>

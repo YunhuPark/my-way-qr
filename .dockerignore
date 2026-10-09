@@ -1,0 +1,8 @@
+.env
+libs/
+.venv/
+forms/
+docs/
+**/__pycache__
+*.csv
+.git
