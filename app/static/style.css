@@ -31,6 +31,8 @@ button:focus-visible, a:focus-visible, select:focus-visible, textarea:focus-visi
 .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
 .tabs button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
 .mode { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 8px 0 12px; }
+/* 한국어는 낱말 단위로 줄을 바꾸고(keep-all), 한 낱말이 화면보다 길 때만 글자 단위로 자른다 */
+.screen { word-break: keep-all; overflow-wrap: anywhere; }
 .screen { --k-bg: #fff; --k-ink: #1c2230; --k-line: #c8ced9; --k-accent: #1f5eff; --k-accent-ink: #fff;
   font-size: calc(1rem * var(--fs, 1)); background: var(--k-bg); color: var(--k-ink); border: 2px solid var(--k-line); border-radius: 14px; padding: 1em; }
 .screen.hc { --k-bg: #000; --k-ink: #fff; --k-line: #fff; --k-accent: #ffe600; --k-accent-ink: #000; }
