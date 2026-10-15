@@ -270,7 +270,9 @@ def _clean_scenario(obj) -> dict | None:
     final = _pair(obj.get("final")) or {"t": "완료되었습니다.", "e": "끝났어요."}
     if not steps:
         return None
-    notes = [_txt(n, 140) for n in (obj.get("notes") or [])[:5] if _txt(n, 140)]
+    # 설명문(notes)은 사용자에게 보이는 글이라, 필드 이름이 새어 나온 문장(staff/true/false)은 버린다
+    leak = re.compile(r"(?<![A-Za-z])(staff|true|false)(?![A-Za-z])", re.I)
+    notes = [t for t in (_txt(n, 140) for n in (obj.get("notes") or [])[:5]) if t and not leak.search(t)]
     return {"title": _txt(obj.get("title"), 40) or "내가 넣은 화면", "steps": steps, "final": final, "notes": notes}
 
 
