@@ -22,6 +22,7 @@ const $ = (id) => document.getElementById(id);
 const myProfile = decodeProfile(new URLSearchParams(location.search).get("p"));
 let data, scKey = "cafe", mode = myProfile ? "mine" : "plain";
 let answers = [], stepIdx = 0, left = 0, timerId = null;
+let confirmed = false;   // AI 변환 화면(custom)에서 "선택 내용 확인"을 마쳤는지
 const easy = {};   // 원문 -> 쉬운 말
 let easySource = "";
 
@@ -37,6 +38,9 @@ const store = {
 const profile = () => (mode === "mine" && myProfile ? myProfile : DEFAULT_PROFILE);
 const limit = () => (profile().tm ? 120 : 30);
 const isDone = () => data.scenarios[scKey].steps.every((_, i) => answers[i] !== undefined);
+// AI 변환 화면은 모든 선택 뒤에 "선택 내용 확인(원문 대조)"을 거쳐야 끝난다. 기본 3종 과업에는 이 단계가 없다.
+const needsConfirm = () => !!data.scenarios[scKey].custom && isDone() && !confirmed;
+const isFinished = () => isDone() && !needsConfirm();
 const txt = (o) => (profile().ez ? (easy[o.t] ?? o.e) : o.t);
 
 function allTexts(sc) {
@@ -53,7 +57,7 @@ async function ensureEasy() {
     const r = await fetch("/api/rewrite", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ texts: need }) });
     const j = await r.json();
     Object.assign(easy, j.results);
-    easySource = j.source === "ai" ? "AI가 쉬운 말로 바꿨어요" : "미리 만들어 둔 쉬운 말 사전을 썼어요";
+    if (!data.scenarios[scKey].custom) easySource = j.source === "ai" ? "AI가 쉬운 말로 바꿨어요" : "미리 만들어 둔 쉬운 말 사전을 썼어요";   // 변환 화면의 문구는 AI가 이미 만든 것
   } catch { /* 원문 사전본(o.e)으로 대체 */ }
 }
 
@@ -68,11 +72,11 @@ function speak(text) {
 function resetTimer() { left = limit(); tick(false); }
 function tick(dec = true) {
   const t = document.querySelector(".timer");
-  const done = isDone();
+  const done = isFinished();
   if (dec) left -= 1;
   if (done) { if (t) t.hidden = true; return; }
   if (left <= 0) {
-    answers = []; stepIdx = 0; left = limit();
+    answers = []; stepIdx = 0; confirmed = false; left = limit();
     if (run) run.timeouts += 1;
     showToast("시간이 지나서 처음 화면으로 돌아갔어요. (실제 키오스크에서 흔히 겪는 일입니다.)");
     render(); return;
@@ -87,9 +91,10 @@ function choose(i, opt) {
   stepIdx = next === -1 ? data.scenarios[scKey].steps.length : next;
   if (run) {
     run.selections.push(`${i + 1}:${opt}`);
-    if (opt !== data.scenarios[scKey].target[i]) run.wrong += 1;
-    if (isDone()) finishRun(run.helps > 0 ? "assisted" : "success");
+    if (opt !== data.scenarios[scKey].target?.[i]) run.wrong += 1;
+    if (isFinished()) finishRun(run.helps > 0 ? "assisted" : "success");
   }
+  if (data.scenarios[scKey].steps[i].opts[opt].staff) showToast("직원을 불러드릴게요. (시연 화면이에요)");
   resetTimer(); render(true);
 }
 
@@ -97,8 +102,33 @@ function stepBlock(sc, i, big) {
   const s = sc.steps[i];
   const q = h("p", { class: "q" }, txt(s.q));
   const choices = h("div", { class: "choices" }, s.opts.map((o, k) =>
-    h("button", { class: "choice", "aria-pressed": String(answers[i] === k), onclick: () => choose(i, k) }, txt(o))));
+    h("button", { class: "choice", "aria-pressed": String(answers[i] === k), onclick: () => choose(i, k) }, txt(o) + (o.staff ? "  🙋 직원 도움" : ""))));
   return h("div", {}, big ? h("h3", { tabindex: "-1", id: "focus-me" }, txt(s.q)) : q, choices);
+}
+
+// ---- AI 변환 화면 전용: 선택 내용 확인(원문 대조)과 마무리 ----
+const summaryRows = (sc) => sc.steps.map((s, i) => {
+  const o = s.opts[answers[i]];
+  return { q: txt(s.q), a: txt(o), origQ: s.q.t, origA: o.t, staff: !!o.staff };
+});
+
+function confirmBlock(sc) {
+  const rows = summaryRows(sc);
+  const check = sc.checks;
+  return h("div", { class: "final" },
+    h("h3", { tabindex: "-1", id: "focus-me" }, "선택한 내용이 맞는지 확인해 주세요"),
+    h("ul", { class: "summary" }, rows.map((r) => h("li", {},
+      h("div", {}, r.q + " → ", h("b", {}, r.a + (r.staff ? " 🙋" : ""))),
+      h("div", { class: "orig" }, `원문: ${r.origQ} → ${r.origA}`)))),
+    check ? h("p", { class: "orig" }, check.numbers_ok ? "✔ 가격·수량 같은 숫자는 원문과 같은지 자동 검사를 통과했어요." : `⚠ 숫자가 원문과 다를 수 있어요: ${[...check.changed_numbers, ...check.dropped_numbers].join(", ")} — 원문을 꼭 확인하세요.`) : null,
+    h("div", { class: "actions" },
+      h("button", { class: "nav primary", onclick: () => { confirmed = true; resetTimer(); render(true); } }, "맞아요, 진행하기"),
+      h("button", { class: "nav", onclick: restart }, "처음부터 다시")));
+}
+
+function finalBlock(sc) {
+  const staff = sc.custom && summaryRows(sc).some((r) => r.staff);
+  return h("div", { class: "final" }, txt(sc.final), staff ? h("p", {}, "🙋 직원 도움이 필요한 선택이 있어요. 직원이 와서 도와드려요. (시연 화면이에요)") : null);
 }
 
 function render(speakNow = false) {
@@ -106,7 +136,8 @@ function render(speakNow = false) {
   el.style.setProperty("--fs", p.fs);
   el.className = "screen" + (p.hc ? " hc" : "") + (p.st ? " step" : "") + (mode === "plain" ? " plain" : "");
   el.replaceChildren();
-  const finished = isDone();
+  const finished = isFinished();
+  const confirming = needsConfirm();
   el.append(h("div", { class: "timer", hidden: finished }));
   el.append(h("h3", {}, sc.title));
   const spoken = [];
@@ -116,8 +147,11 @@ function render(speakNow = false) {
 
   if (p.st) {
     if (finished) {
-      el.append(h("div", { class: "final" }, txt(sc.final)));
+      el.append(finalBlock(sc));
       spoken.push(txt(sc.final));
+    } else if (confirming) {
+      el.append(confirmBlock(sc));
+      spoken.push("선택한 내용이 맞는지 확인해 주세요.", ...summaryRows(sc).map((r) => `${r.q}. ${r.a}`));
     } else {
       const i = stepIdx;
       el.append(h("p", { class: "hint" }, `${i + 1} / ${sc.steps.length} 단계`));
@@ -130,8 +164,12 @@ function render(speakNow = false) {
     el.append(actions);
   } else {
     sc.steps.forEach((s, i) => { el.append(stepBlock(sc, i, false)); spoken.push(txt(s.q), ...s.opts.map(txt)); });
-    if (finished) { el.append(h("div", { class: "final" }, txt(sc.final))); spoken.push(txt(sc.final)); }
+    if (confirming) { el.append(confirmBlock(sc)); spoken.push("선택한 내용이 맞는지 확인해 주세요.", ...summaryRows(sc).map((r) => `${r.q}. ${r.a}`)); }
+    if (finished) { el.append(finalBlock(sc)); spoken.push(txt(sc.final)); }
     if (finished) el.append(h("div", { class: "actions" }, h("button", { class: "nav primary", onclick: restart }, txt(data.ui.restart))));
+  }
+  if (sc.custom && sc.notes?.length) {
+    el.append(h("details", { class: "ainotes" }, h("summary", {}, "AI가 한 일 (변환 설명)"), h("ul", {}, sc.notes.map((n) => h("li", {}, n)))));
   }
   if (p.vo && speakNow) speak(readAloud());
   if (p.ez && easySource) el.append(h("p", { class: "timer" }, easySource));
@@ -139,14 +177,14 @@ function render(speakNow = false) {
   document.getElementById("focus-me")?.focus({ preventScroll: true });
 }
 
-function restart() { answers = []; stepIdx = 0; resetTimer(); render(); }
+function restart() { answers = []; stepIdx = 0; confirmed = false; resetTimer(); render(); }
 
 function drawTabs() {
   $("tabs").replaceChildren(...Object.entries(data.scenarios).map(([k, s]) =>
-    h("button", { "aria-pressed": String(k === scKey), disabled: !!run, onclick: async () => { scKey = k; answers = []; stepIdx = 0; drawTabs(); await ensureEasy(); resetTimer(); render(); } }, s.title)));
+    h("button", { "aria-pressed": String(k === scKey), disabled: !!run, onclick: async () => { scKey = k; answers = []; stepIdx = 0; confirmed = false; drawTabs(); await ensureEasy(); resetTimer(); render(); renderPanel(); } }, (s.custom ? "✨ " : "") + s.title)));
 }
 function drawMode() {
-  const btn = (m, label) => h("button", { "aria-pressed": String(mode === m), class: mode === m ? "primary" : "", disabled: !!run, onclick: async () => { mode = m; answers = []; stepIdx = 0; drawMode(); await ensureEasy(); resetTimer(); render(); } }, label);
+  const btn = (m, label) => h("button", { "aria-pressed": String(mode === m), class: mode === m ? "primary" : "", disabled: !!run, onclick: async () => { mode = m; answers = []; stepIdx = 0; confirmed = false; drawMode(); await ensureEasy(); resetTimer(); render(); } }, label);
   $("mode").replaceChildren(btn("plain", "기본 화면"), btn("mine", myProfile ? "내 방식 화면" : "내 방식 화면 (QR 없음)"));
   if (!myProfile) $("mode").lastChild.disabled = true;
 }
@@ -158,7 +196,7 @@ const RESULT_KO = { success: "성공", assisted: "도움받음", failed: "실패
 function startRun() {
   const pid = ($("pid")?.value || "").trim() || "P?";
   try { localStorage.setItem("mwqr_pid", pid); } catch { /* 무시 */ }
-  answers = []; stepIdx = 0;
+  answers = []; stepIdx = 0; confirmed = false;
   run = { pid, scenario: scKey, mode, startIso: new Date().toISOString(), t0: performance.now(), wrong: 0, backs: 0, timeouts: 0, helps: 0, selections: [] };
   drawTabs(); drawMode(); resetTimer(); render(); renderPanel();
 }
@@ -199,9 +237,11 @@ function renderPanel() {
     h("div", { class: "row" },
       h("label", { for: "pid" }, "참가자 코드"),
       h("input", { id: "pid", value: pidVal, disabled: !!run, size: "6", style: "padding:6px;font:inherit" })),
-    h("p", {}, h("b", {}, "과업 카드: "), sc.task, ` (현재: ${sc.title} / ${mode === "mine" ? "내 방식 화면" : "기본 화면"})`),
+    sc.task
+      ? h("p", {}, h("b", {}, "과업 카드: "), sc.task, ` (현재: ${sc.title} / ${mode === "mine" ? "내 방식 화면" : "기본 화면"})`)
+      : h("p", { class: "hint" }, "이 화면은 AI 변환 체험용이라 테스트 과업이 없습니다. 위 탭에서 카페·민원·병원 중 하나를 고르세요."),
     h("div", { class: "row" },
-      !run ? h("button", { class: "primary", onclick: startRun }, "과업 시작 (기록 시작)") : null,
+      !run && sc.task ? h("button", { class: "primary", onclick: startRun }, "과업 시작 (기록 시작)") : null,
       run ? h("button", { onclick: () => { run.helps += 1; renderPanel(); } }, `도움·힌트 준 횟수 +1 (${run.helps})`) : null,
       run ? h("button", { onclick: () => finishRun("failed") }, "중단 (실패로 기록)") : null),
     run ? h("p", { class: "hint" }, "진행 중: 완료 화면이 뜨면 자동으로 종료·저장됩니다.") : null,
@@ -216,6 +256,19 @@ function renderPanel() {
 
 (async () => {
   data = await (await fetch("/api/scenarios")).json();
+  // AI 화면 변환 페이지에서 넘어온 화면(?custom=1)이 있으면 탭으로 추가한다
+  if (qs.get("custom") === "1") {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem("mwqr_custom") || "null");
+      if (saved?.scenario?.steps?.length) {
+        const sc = { ...saved.scenario, custom: true, checks: saved.checks || null };
+        data.scenarios.custom = sc;
+        scKey = "custom";
+        for (const o of [sc.final, ...sc.steps.flatMap((s) => [s.q, ...s.opts])]) easy[o.t] = o.e;   // AI가 만든 쉬운 말을 그대로 사용
+        easySource = "AI가 변환한 화면이에요";
+      }
+    } catch { /* 저장된 변환 화면이 없으면 기본 시나리오로 */ }
+  }
   drawTabs(); drawMode(); renderPanel();
   await ensureEasy();
   resetTimer(); render();

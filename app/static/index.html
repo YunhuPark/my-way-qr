@@ -56,6 +56,12 @@
     <p class="hint">휴대폰 카메라로 찍으면 같은 설정으로 열립니다.<span id="wifi" hidden> (내 PC에서 실행 중일 때는 PC와 같은 Wi-Fi여야 합니다.)</span></p>
     <code id="link"></code>
   </section>
+
+  <section class="card full" aria-labelledby="h-tr">
+    <h2 id="h-tr">4. 어떤 키오스크든 AI로 바꿔 보기</h2>
+    <p>실제 키오스크 화면의 질문·선택지를 붙여넣으면, AI가 위 프로필에 맞게 단계로 나누고 쉬운 말로 바꿉니다. 결제 전에 원문과 대조해 확인하는 단계도 붙습니다.</p>
+    <div class="row"><a id="trlink" href="/transform.html"><button type="button" class="primary">AI 화면 변환 해 보기</button></a></div>
+  </section>
 </main>
 
 <script src="/profile.js"></script>
@@ -93,6 +99,7 @@ function refresh() {
   $("qr").src = `/api/qr?url=${encodeURIComponent(url)}`;
   $("link").textContent = url;
   $("go").href = `/kiosk.html?p=${encodeProfile(profile)}${testSuffix}`;
+  $("trlink").href = `/transform.html?p=${encodeProfile(profile)}`;   // 지금 만든 프로필을 변환 체험에 이어 준다
 }
 for (const id of ["fs", "ez", "hc", "vo", "st", "tm"]) $(id).addEventListener("change", () => { readControls(); refresh(); });
 

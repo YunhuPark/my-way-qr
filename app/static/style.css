@@ -47,4 +47,9 @@ button:focus-visible, a:focus-visible, select:focus-visible, textarea:focus-visi
 .screen .actions { display: flex; gap: .5em; flex-wrap: wrap; margin-top: 1em; }
 .screen.step .choice { padding: .9em 1em; }
 .screen.plain { font-size: calc(.82rem * var(--fs, 1)); }
+.screen .orig { font-size: .75em; opacity: .85; margin-top: .15em; }
+.screen .summary { margin: .5em 0; padding-left: 1.1em; }
+.screen .summary li { margin-bottom: .6em; }
+.screen .ainotes { margin-top: 1em; font-size: .85em; }
+.screen .ainotes summary { cursor: pointer; font-weight: 700; }
 .toast { margin: 8px 0; padding: 10px 12px; border-radius: 8px; background: #fff4e5; color: var(--warn); border: 1px solid #f3c58a; }

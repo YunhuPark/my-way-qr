@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 화면 변환 - 내 방식 QR</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="site">
+  <h1>AI 화면 변환</h1>
+  <p>어떤 키오스크든 화면의 질문·선택지·안내문을 붙여넣으면, AI가 단계로 나누고 쉬운 말로 바꿉니다. 직원 도움이 필요한 선택지는 따로 표시하고, 가격 같은 숫자가 바뀌지 않았는지 검사합니다.</p>
+  <p class="hint"><a href="/">&larr; 프로필 만들기</a></p>
+</header>
+<main>
+  <section class="card full" aria-labelledby="h-in">
+    <h2 id="h-in">1. 키오스크 화면 내용 붙여넣기</h2>
+    <textarea id="raw" style="min-height:170px" maxlength="1500" aria-describedby="rawhint"></textarea>
+    <p class="hint" id="rawhint">최대 1,500자. 실제 키오스크의 문구를 그대로 옮겨 주세요. 입력한 내용은 AI 처리를 위해 외부 AI 서비스로 전송될 수 있으니 이름·연락처 같은 개인정보는 넣지 마세요.</p>
+    <div class="row">
+      <button class="primary" id="go">AI로 화면 변환</button>
+      <button id="sample" type="button">식당 주문 예시 넣기</button>
+      <span class="hint" id="status" role="status"></span>
+    </div>
+  </section>
+
+  <section class="card full" id="out" hidden aria-labelledby="h-out">
+    <h2 id="h-out">2. 변환 결과</h2>
+    <div id="checks"></div>
+    <h3 style="font-size:1rem;margin:.8rem 0 .3rem">AI가 한 일</h3>
+    <ul id="notes"></ul>
+    <h3 style="font-size:1rem;margin:.8rem 0 .3rem">단계별 미리보기 <span class="hint">(원문 → 쉬운 말)</span></h3>
+    <div id="steps"></div>
+    <div class="row">
+      <button class="primary" id="try" type="button">이 화면으로 키오스크 체험</button>
+      <span class="hint" id="tryhint"></span>
+    </div>
+  </section>
+</main>
+
+<script src="/profile.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const qs = new URLSearchParams(location.search);
+const pParam = qs.get("p");   // 프로필(있으면 키오스크 체험에 그대로 이어 줌)
+let result = null;
+
+const SAMPLE = `1. 메뉴 선택: 돈가스 정식 9,500원 / 우동 6,000원 / 비빔밥 8,000원 중 하나를 고른 뒤, 곱빼기 추가(+1,000원) 여부를 선택하세요.
+2. 식사 방법: 매장 식사 또는 포장(포장 시 용기비 500원 별도)을 선택하세요.
+3. 결제 수단: 신용·체크카드, 간편결제(QR) 또는 현금(직원 호출 후 결제) 중 선택하고 결제를 진행하십시오.`;
+
+$("sample").addEventListener("click", () => { $("raw").value = SAMPLE; });
+
+$("go").addEventListener("click", async () => {
+  const text = $("raw").value.trim();
+  if (text.length < 5) { $("status").textContent = "변환할 내용을 먼저 붙여넣어 주세요."; return; }
+  $("go").disabled = true; $("status").textContent = "AI가 변환하는 중… (10~30초 걸릴 수 있어요)"; $("out").hidden = true;
+  try {
+    const r = await fetch("/api/transform", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
+    const j = await r.json();
+    if (!r.ok) { $("status").textContent = j.error || "변환에 실패했어요."; return; }
+    result = j; show(j); $("status").textContent = "";
+  } catch {
+    $("status").textContent = "서버에 연결하지 못했어요. 잠시 뒤 다시 시도해 주세요.";
+  } finally {
+    $("go").disabled = false;
+  }
+});
+
+function show(j) {
+  const c = j.checks, sc = j.scenario;
+  const bad = [...c.changed_numbers, ...c.dropped_numbers];
+  $("checks").replaceChildren(
+    h("p", { class: c.numbers_ok ? "" : "toast" },
+      c.numbers_ok ? "✔ 숫자 검사 통과: 가격·수량 같은 숫자가 원문과 같아요." : `⚠ 숫자 검사 실패: ${bad.join(", ")} 가 원문과 다르거나 빠졌어요. 이 결과는 쓰지 말고 다시 변환해 주세요.`),
+    h("p", { class: "hint" }, `원문 일치: ${c.originals_matched} / ${c.originals_total} 문구가 입력에 그대로 있어요. (질문을 나누거나 선택지를 정리하면 일부는 입력과 달라질 수 있어요.)`));
+  $("notes").replaceChildren(...(sc.notes.length ? sc.notes : ["(AI가 남긴 설명이 없어요)"]).map((n) => h("li", {}, n)));
+  $("steps").replaceChildren(...sc.steps.map((s, i) => h("div", { class: "card", style: "margin:.5rem 0;padding:.7rem" },
+    h("b", {}, `${i + 1}단계. ${s.q.t}`), h("div", { class: "hint" }, `→ ${s.q.e}`),
+    h("ul", {}, s.opts.map((o) => h("li", {}, `${o.t}  →  ${o.e}`, o.staff ? "  🙋 직원 도움" : ""))))));
+  $("try").disabled = !c.numbers_ok;
+  $("tryhint").textContent = c.numbers_ok ? (pParam ? "만들어 둔 내 프로필이 적용돼요." : "프로필 없이 열면 기본 화면만 볼 수 있어요. 먼저 프로필을 만들어 오면 내 방식으로 볼 수 있어요.") : "숫자 검사를 통과해야 체험할 수 있어요.";
+  $("out").hidden = false;
+  $("out").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+$("try").addEventListener("click", () => {
+  if (!result) return;
+  try { sessionStorage.setItem("mwqr_custom", JSON.stringify({ scenario: result.scenario, checks: result.checks })); } catch { $("tryhint").textContent = "이 브라우저는 변환 결과를 임시 저장할 수 없어요."; return; }
+  location.href = "/kiosk.html?custom=1" + (pParam ? `&p=${encodeURIComponent(pParam)}` : "");
+});
+</script>
+</body>
+</html>
