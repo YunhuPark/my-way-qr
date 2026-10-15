@@ -34,7 +34,7 @@
     </select>
     <label class="opt"><input type="checkbox" id="ez"> 어려운 말을 쉬운 말로</label>
     <label class="opt"><input type="checkbox" id="hc"> 글씨가 또렷하게 (고대비)</label>
-    <label class="opt"><input type="checkbox" id="vo"> 소리로 읽어 주기</label>
+    <label class="opt"><input type="checkbox" id="vo"> 소리로 읽어 주기 (음성 안내)</label>
     <label class="opt"><input type="checkbox" id="st"> 한 번에 한 단계씩 보기</label>
     <label class="opt"><input type="checkbox" id="tm"> 넉넉한 시간 (제한 시간 연장)</label>
   </section>
@@ -53,7 +53,7 @@
     <div class="row" style="justify-content:center">
       <a id="go" href="#"><button class="primary" type="button">이 설정으로 키오스크 체험</button></a>
     </div>
-    <p class="hint">휴대폰 카메라로 찍으면 같은 설정으로 열립니다. (PC와 같은 Wi-Fi여야 합니다.)</p>
+    <p class="hint">휴대폰 카메라로 찍으면 같은 설정으로 열립니다.<span id="wifi" hidden> (내 PC에서 실행 중일 때는 PC와 같은 Wi-Fi여야 합니다.)</span></p>
     <code id="link"></code>
   </section>
 </main>
@@ -63,7 +63,20 @@
 const $ = (id) => document.getElementById(id);
 let profile = { ...DEFAULT_PROFILE };
 let base = location.origin;
-fetch("/api/base").then(r => r.json()).then(j => { base = j.base; refresh(); }).catch(() => {});
+
+// 테스트 모드: 이 페이지를 /?test=1&pid=P1 로 열면 QR과 "키오스크 체험" 링크가 모두 테스트 모드(기록 패널 표시)로 만들어진다.
+const qs = new URLSearchParams(location.search);
+const testPid = (qs.get("pid") || "P1").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 10) || "P1";
+const testSuffix = qs.get("test") === "1" ? `&test=1&pid=${testPid}` : "";
+if (testSuffix) document.querySelector("header.site p").textContent += ` [테스트 모드: 참가자 ${testPid}]`;
+
+fetch("/api/base").then(r => r.json()).then(j => {
+  base = j.base;
+  // 사설 IP(내 PC에서 로컬 실행)일 때만 "같은 Wi-Fi" 안내를 보여준다. 공개 주소에서는 필요 없다.
+  const host = new URL(base).hostname;
+  $("wifi").hidden = !/^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|localhost$)/.test(host);
+  refresh();
+}).catch(() => {});
 
 function readControls() {
   profile = { fs: Number($("fs").value), ez: $("ez").checked, hc: $("hc").checked, vo: $("vo").checked, st: $("st").checked, tm: $("tm").checked };
@@ -76,10 +89,10 @@ function refresh() {
   const pre = $("pre");
   pre.style.setProperty("--fs", profile.fs);
   pre.classList.toggle("hc", profile.hc);
-  const url = `${base}/kiosk.html?p=${encodeProfile(profile)}`;
+  const url = `${base}/kiosk.html?p=${encodeProfile(profile)}${testSuffix}`;
   $("qr").src = `/api/qr?url=${encodeURIComponent(url)}`;
   $("link").textContent = url;
-  $("go").href = `/kiosk.html?p=${encodeProfile(profile)}`;
+  $("go").href = `/kiosk.html?p=${encodeProfile(profile)}${testSuffix}`;
 }
 for (const id of ["fs", "ez", "hc", "vo", "st", "tm"]) $(id).addEventListener("change", () => { readControls(); refresh(); });
 

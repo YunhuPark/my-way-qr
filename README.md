@@ -11,6 +11,10 @@ python -m pip install --target .\libs -r requirements.txt   # 처음 한 번
 - 휴대폰으로 QR을 찍어 보려면 PC와 같은 Wi-Fi여야 한다 (QR에는 PC의 LAN 주소가 들어간다).
 - AI 기능: 이 폴더에 `.env`를 만들고 `ANTHROPIC_API_KEY=...`를 적는다. 없으면 규칙/사전 모드로 동작한다.
 
+## 사용 방법
+- 사용·테스트 진행 방법: [docs/usage-guide.md](docs/usage-guide.md)
+- 배포 방법: [DEPLOY.md](DEPLOY.md)
+
 ## 구조
 - `app/main.py` — FastAPI. `/api/profile/parse`(말 → 설정), `/api/rewrite`(쉬운 말 변환), `/api/qr`, `/api/base`
 - `app/scenarios.json` — 키오스크 시나리오(카페·민원·병원)와 쉬운 말 사전 작성본

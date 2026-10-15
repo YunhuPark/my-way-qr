@@ -110,6 +110,9 @@ function render(speakNow = false) {
   el.append(h("div", { class: "timer", hidden: finished }));
   el.append(h("h3", {}, sc.title));
   const spoken = [];
+  const readAloud = () => (spoken.length ? spoken : [sc.title]).join(". ");
+  // 소리 안내 버튼은 제목 바로 아래(글씨를 크게 해도 스크롤 없이 보이는 위치)에 둔다
+  if (p.vo) el.append(h("div", { class: "actions" }, h("button", { class: "nav", onclick: () => speak(readAloud()) }, "🔊 " + txt(data.ui.listen))));
 
   if (p.st) {
     if (finished) {
@@ -126,15 +129,11 @@ function render(speakNow = false) {
     if (finished) actions.append(h("button", { class: "nav primary", onclick: restart }, txt(data.ui.restart)));
     el.append(actions);
   } else {
-    sc.steps.forEach((_, i) => el.append(stepBlock(sc, i, false)));
-    if (finished) { el.append(h("div", { class: "final" }, txt(sc.final))); }
+    sc.steps.forEach((s, i) => { el.append(stepBlock(sc, i, false)); spoken.push(txt(s.q), ...s.opts.map(txt)); });
+    if (finished) { el.append(h("div", { class: "final" }, txt(sc.final))); spoken.push(txt(sc.final)); }
     if (finished) el.append(h("div", { class: "actions" }, h("button", { class: "nav primary", onclick: restart }, txt(data.ui.restart))));
   }
-  if (p.vo) {
-    const all = spoken.length ? spoken : [sc.title];
-    el.append(h("div", { class: "actions" }, h("button", { class: "nav", onclick: () => speak(all.join(". ")) }, "🔊 " + txt(data.ui.listen))));
-    if (speakNow) speak(all.join(". "));
-  }
+  if (p.vo && speakNow) speak(readAloud());
   if (p.ez && easySource) el.append(h("p", { class: "timer" }, easySource));
   tick(false);
   document.getElementById("focus-me")?.focus({ preventScroll: true });
