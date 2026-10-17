@@ -7,14 +7,15 @@
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-<div class="kiosk-wrap">
+<main class="kiosk-wrap">
+  <h1 class="sr-only">모의 키오스크</h1>
   <p class="hint"><a href="/">&larr; 프로필 만들기</a> · 시연용 모의 키오스크입니다. 실제 결제·발급은 되지 않습니다.</p>
   <div class="tabs" id="tabs" role="group" aria-label="체험할 키오스크"></div>
   <div class="mode" id="mode" role="group" aria-label="화면 방식"></div>
   <div id="testpanel" class="card" hidden></div>
   <div id="toast" class="toast" role="status" hidden></div>
   <div class="screen" id="screen" aria-live="polite"></div>
-</div>
+</main>
 
 <script src="/profile.js"></script>
 <script>
@@ -138,7 +139,8 @@ function render(speakNow = false) {
   el.replaceChildren();
   const finished = isFinished();
   const confirming = needsConfirm();
-  el.append(h("div", { class: "timer", hidden: finished }));
+  // role="timer"는 값이 바뀌어도 스크린리더가 매초 읽지 않는다 (상위 aria-live 영역 안에서 1초마다 바뀌므로 필요)
+  el.append(h("div", { class: "timer", role: "timer", hidden: finished }));
   el.append(h("h3", {}, sc.title));
   const spoken = [];
   const readAloud = () => (spoken.length ? spoken : [sc.title]).join(". ");
