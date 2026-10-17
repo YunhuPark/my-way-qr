@@ -186,7 +186,7 @@ function drawTabs() {
     h("button", { "aria-pressed": String(k === scKey), disabled: !!run, onclick: async () => { scKey = k; answers = []; stepIdx = 0; confirmed = false; drawTabs(); await ensureEasy(); resetTimer(); render(); renderPanel(); } }, (s.custom ? "✨ " : "") + s.title)));
 }
 function drawMode() {
-  const btn = (m, label) => h("button", { "aria-pressed": String(mode === m), class: mode === m ? "primary" : "", disabled: !!run, onclick: async () => { mode = m; answers = []; stepIdx = 0; confirmed = false; drawMode(); await ensureEasy(); resetTimer(); render(); } }, label);
+  const btn = (m, label) => h("button", { "aria-pressed": String(mode === m), class: mode === m ? "primary" : "", disabled: !!run, onclick: async () => { mode = m; answers = []; stepIdx = 0; confirmed = false; drawMode(); await ensureEasy(); resetTimer(); render(); renderPanel(); } }, label);
   $("mode").replaceChildren(btn("plain", "기본 화면"), btn("mine", myProfile ? "내 방식 화면" : "내 방식 화면 (QR 없음)"));
   if (!myProfile) $("mode").lastChild.disabled = true;
 }
@@ -233,7 +233,8 @@ function renderPanel() {
   let lastPid = qs.get("pid") || "";
   try { lastPid = lastPid || localStorage.getItem("mwqr_pid") || ""; } catch { /* 무시 */ }
   const pidVal = run ? run.pid : ($("pid")?.value || lastPid);
-  panel.replaceChildren(
+  // replaceChildren에 null을 넘기면 "null"이라는 글자가 그대로 표시되므로 비어 있는 칸은 걸러서 넘긴다
+  panel.replaceChildren(...[
     h("h2", {}, "사용자 테스트 기록 (진행자용)"),
     h("p", { class: "hint" }, "기록은 이 기기의 브라우저에만 저장됩니다. 참가자는 P1, P2처럼 코드로만 입력하세요."),
     h("div", { class: "row" },
@@ -253,7 +254,7 @@ function renderPanel() {
     rows.length ? h("table", { style: "width:100%;border-collapse:collapse;font-size:.85rem;margin-top:8px" },
       h("tr", {}, ["코드", "과업", "화면", "시간(초)", "결과", "오선택", "뒤로", "초과", "도움"].map((t) => h("th", { style: "text-align:left;border-bottom:1px solid #ccc" }, t))),
       rows.slice(-6).map((r) => h("tr", {}, [r.pid, data.scenarios[r.scenario].title, r.mode === "mine" ? "내 방식" : "기본", r.duration_sec, RESULT_KO[r.result], r.wrong, r.backs, r.timeouts, r.helps].map((v) => h("td", { style: "padding:2px 6px 2px 0" }, String(v)))))) : null,
-  );
+  ].filter(Boolean));
 }
 
 (async () => {
