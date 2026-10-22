@@ -124,10 +124,13 @@ def _clean_profile(raw: dict) -> dict:
 
 def _rule_profile(text: str) -> dict:
     p = dict(DEFAULT_PROFILE)
-    if re.search(r"가장 크|제일 크|아주 크|매우 크|엄청 크", text):
+    # AI 프롬프트와 같은 기준: 크게=1.4, 아주 크게=1.8, 가장(제일) 크게=2.2
+    if re.search(r"가장 ?크|제일 ?크|최대로", text):
         p["fs"] = 2.2
-    elif re.search(r"크게|큰 ?글|큰 ?글씨|잘 ?안 ?보", text):
+    elif re.search(r"아주 ?크|매우 ?크|엄청 ?크|많이 ?크|잘 ?안 ?보", text):
         p["fs"] = 1.8
+    elif re.search(r"크게|큰 ?글", text):
+        p["fs"] = 1.4
     if re.search(r"쉬운|쉽게|어려운 ?말|한자", text):
         p["ez"] = True
     if re.search(r"대비|선명|눈이 ?나|시력|잘 ?안 ?보", text):

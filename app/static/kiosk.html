@@ -9,12 +9,15 @@
 <body>
 <main class="kiosk-wrap">
   <h1 class="sr-only">모의 키오스크</h1>
-  <p class="hint"><a href="/">&larr; 프로필 만들기</a> · 시연용 모의 키오스크입니다. 실제 결제·발급은 되지 않습니다.</p>
+  <p class="hint"><a href="/">&larr; 내 화면 설정 만들기</a> · 시연용 모의 키오스크입니다. 실제 결제·발급은 되지 않습니다.</p>
   <div class="tabs" id="tabs" role="group" aria-label="체험할 키오스크"></div>
   <div class="mode" id="mode" role="group" aria-label="화면 방식"></div>
   <div id="testpanel" class="card" hidden></div>
   <div id="toast" class="toast" role="status" hidden></div>
-  <div class="screen" id="screen" aria-live="polite"></div>
+  <div class="kiosk-frame">
+    <div class="kiosk-top" aria-hidden="true"><span>무인 주문기 · 시연용</span><span class="dots">● ● ●</span></div>
+    <div class="screen" id="screen" aria-live="polite"></div>
+  </div>
 </main>
 
 <script src="/profile.js"></script>
@@ -157,6 +160,7 @@ function render(speakNow = false) {
     } else {
       const i = stepIdx;
       el.append(h("p", { class: "hint" }, `${i + 1} / ${sc.steps.length} 단계`));
+      el.append(h("div", { class: "bar", "aria-hidden": "true" }, h("span", { style: `width:${Math.round(((i + 1) / sc.steps.length) * 100)}%` })));
       el.append(stepBlock(sc, i, true));
       spoken.push(txt(sc.steps[i].q), ...sc.steps[i].opts.map(txt));
     }

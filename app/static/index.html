@@ -2,30 +2,66 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>내 방식 QR - 프로필 만들기</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>내 방식 QR - 내 화면 설정 만들기</title>
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 <header class="site">
   <h1>내 방식 QR</h1>
-  <p>내가 편한 화면 방식을 QR 하나에 담아, 키오스크에서 찍으면 내 방식으로 바꿔 줍니다.</p>
+  <p>내가 편한 화면 방식을 QR 하나에 담아, 키오스크를 내 방식으로 바꿔 보세요.</p>
 </header>
 <main>
-  <section class="card" aria-labelledby="h-say">
-    <h2 id="h-say">1. 말로 알려주세요</h2>
-    <textarea id="say" placeholder="예) 글씨는 크게, 어려운 말은 쉽게 바꿔 주세요. 천천히 하나씩 보고 싶어요."></textarea>
-    <div class="row">
-      <button class="primary" id="ai">AI로 설정하기</button>
-      <span class="badge" id="src" hidden></span>
+  <section class="compare" aria-label="기존 키오스크 화면과 내 방식 화면 비교">
+    <div class="cmp bad">
+      <span class="tag">기존 키오스크</span>
+      <div class="mini" aria-hidden="true">수령 방식을 선택하십시오.<br><span class="b">매장 내 취식</span><span class="b">포장(테이크아웃)</span>
+        <div class="clock">⏱ 30초 후 처음 화면으로 돌아갑니다</div></div>
+      <p class="cap">작은 글씨, 어려운 말, 짧은 제한 시간</p>
     </div>
-    <p class="hint">입력한 말에서 <b>화면 선호</b>만 뽑아냅니다. 건강·장애 정보는 묻지도, 저장하지도 않습니다.</p>
-    <p class="hint">입력한 문장은 AI 처리를 위해 외부 AI 서비스로 전송될 수 있습니다. 이름·연락처 같은 개인정보는 적지 마세요.</p>
+    <div class="cmp good">
+      <span class="tag">내 방식</span>
+      <div class="mini" aria-hidden="true">어디서 드시나요?<span class="b">여기서 먹기</span><span class="b">가져가기</span></div>
+      <p class="cap">큰 글씨, 쉬운 말, 한 번에 하나씩</p>
+    </div>
   </section>
 
-  <section class="card" aria-labelledby="h-set">
-    <h2 id="h-set">2. 직접 고르기</h2>
-    <label for="fs">글자 크기</label>
+  <nav class="stepper" aria-label="진행 단계">
+    <ol>
+      <li class="on" aria-current="step">1 말하기</li>
+      <li>2 확인하기</li>
+      <li>3 내 QR</li>
+    </ol>
+  </nav>
+
+  <!-- 1단계: 말하기 -->
+  <section class="card" id="s1" aria-labelledby="h-say">
+    <h2 id="h-say" tabindex="-1">화면이 어떻게 보이면 편하세요?</h2>
+    <label class="sr-only" for="say">원하는 화면 방식</label>
+    <textarea id="say" placeholder="예) 글씨는 크게, 어려운 말은 쉽게 바꿔 주세요. 천천히 하나씩 보고 싶어요."></textarea>
+    <div class="chips" role="group" aria-label="자주 쓰는 말 (누르면 입력칸에 추가)">
+      <button type="button" data-say="글씨는 크게">글씨 크게</button>
+      <button type="button" data-say="어려운 말은 쉽게">쉬운 말로</button>
+      <button type="button" data-say="글씨가 또렷하게">또렷하게</button>
+      <button type="button" data-say="소리로 읽어 주세요">소리로 읽기</button>
+      <button type="button" data-say="한 번에 하나씩">하나씩</button>
+      <button type="button" data-say="천천히 할 수 있게">천천히</button>
+    </div>
+    <div class="row">
+      <button class="mic" id="mic" type="button" aria-pressed="false">🎤 말로 입력</button>
+      <button class="primary" id="ai" type="button">AI로 설정하기 →</button>
+    </div>
+    <p class="hint" id="status1" role="status"></p>
+    <p class="row" style="margin-top:6px"><button type="button" id="skip">AI 없이 직접 고르기</button></p>
+    <p class="hint" id="micnote"></p>
+    <p class="hint">말씀하신 내용에서 <b>화면 선호</b>만 뽑아냅니다. 건강·장애 정보는 묻지도, 저장하지도 않습니다. 입력한 문장은 AI 처리를 위해 외부 AI 서비스로 전송될 수 있으니 이름·연락처 같은 개인정보는 적지 마세요.</p>
+    <p class="hint" id="micprivacy" hidden>🎤 음성 입력을 쓰면 말씀이 글자로 바뀌는 동안 <b>브라우저 회사(예: 구글, 애플)의 서버</b>로 전송될 수 있습니다.</p>
+  </section>
+
+  <!-- 2단계: 확인하기 -->
+  <section class="card" id="s2" aria-labelledby="h-set" hidden>
+    <h2 id="h-set" tabindex="-1">이렇게 바뀌어요 <span class="badge" id="src" hidden></span></h2>
+    <label class="lab" for="fs">글자 크기</label>
     <select id="fs">
       <option value="1">보통</option>
       <option value="1.4">크게</option>
@@ -37,30 +73,31 @@
     <label class="opt"><input type="checkbox" id="vo"> 소리로 읽어 주기 (음성 안내)</label>
     <label class="opt"><input type="checkbox" id="st"> 한 번에 한 단계씩 보기</label>
     <label class="opt"><input type="checkbox" id="tm"> 넉넉한 시간 (제한 시간 연장)</label>
-  </section>
-
-  <section class="card" aria-labelledby="h-pre">
-    <h2 id="h-pre">미리보기</h2>
+    <h3 style="margin:18px 0 8px;font-size:1.05rem">미리보기</h3>
     <div class="screen" id="pre" aria-live="polite">
       <h3>본인 확인을 위해 신분증을 인식기에 접촉하십시오.</h3>
       <div class="choices"><button class="choice" aria-pressed="true">신분증 인식 시작</button><button class="choice" aria-pressed="false">지문 인증으로 대체</button></div>
     </div>
-  </section>
-
-  <section class="card qrbox" aria-labelledby="h-qr">
-    <h2 id="h-qr">3. 내 QR</h2>
-    <img id="qr" alt="내 방식 QR 코드. 키오스크 체험 화면으로 연결됩니다.">
-    <div class="row" style="justify-content:center">
-      <a id="go" href="#"><button class="primary" type="button">이 설정으로 키오스크 체험</button></a>
+    <div class="row">
+      <button type="button" id="back2">← 다시 말하기</button>
+      <button class="primary" type="button" id="next2">QR 만들기 →</button>
     </div>
-    <p class="hint">휴대폰 카메라로 찍으면 같은 설정으로 열립니다.<span id="wifi" hidden> (내 PC에서 실행 중일 때는 PC와 같은 Wi-Fi여야 합니다.)</span></p>
-    <code id="link"></code>
   </section>
 
-  <section class="card full" aria-labelledby="h-tr">
-    <h2 id="h-tr">4. 어떤 키오스크든 AI로 바꿔 보기</h2>
-    <p>실제 키오스크 화면의 질문·선택지를 붙여넣으면, AI가 위 프로필에 맞게 단계로 나누고 쉬운 말로 바꿉니다. 결제 전에 원문과 대조해 확인하는 단계도 붙습니다.</p>
-    <div class="row"><a id="trlink" href="/transform.html"><button type="button" class="primary">AI 화면 변환 해 보기</button></a></div>
+  <!-- 3단계: 내 QR -->
+  <section class="card qrbox" id="s3" aria-labelledby="h-qr" hidden>
+    <h2 id="h-qr" tabindex="-1">내 QR이 만들어졌어요</h2>
+    <img id="qr" alt="내 방식 QR 코드. 휴대폰 카메라로 찍으면 키오스크 체험 화면으로 연결됩니다.">
+    <p class="hint" style="margin-top:10px">휴대폰 카메라로 찍으면 같은 설정으로 열립니다.<span id="wifi" hidden> (내 PC에서 실행 중일 때는 PC와 같은 Wi-Fi여야 합니다.)</span></p>
+    <div class="row" style="justify-content:center">
+      <a class="btn" id="go" href="#"><button class="primary" type="button">이 설정으로 키오스크 체험</button></a>
+    </div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
+    <h3 style="margin:0 0 6px;font-size:1.1rem">어떤 키오스크든 AI로 바꿔 보기</h3>
+    <p class="hint" style="margin-top:0">실제 키오스크 화면의 질문·선택지를 붙여넣으면, AI가 단계로 나누고 쉬운 말로 바꿉니다. 결제 전에는 원문과 대조해 확인합니다.</p>
+    <div class="row" style="justify-content:center"><a class="btn" id="trlink" href="/transform.html"><button type="button">AI 화면 변환 해 보기</button></a></div>
+    <p class="row" style="justify-content:center"><button type="button" id="again">← 설정 다시 하기</button></p>
+    <code id="link"></code>
   </section>
 </main>
 
@@ -84,6 +121,19 @@ fetch("/api/base").then(r => r.json()).then(j => {
   refresh();
 }).catch(() => {});
 
+// ---- 단계 이동 ----
+function go(n) {
+  for (const i of [1, 2, 3]) $("s" + i).hidden = i !== n;
+  document.querySelectorAll(".stepper li").forEach((li, idx) => {
+    li.classList.toggle("on", idx + 1 === n);
+    li.classList.toggle("done", idx + 1 < n);
+    if (idx + 1 === n) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current");
+  });
+  const h = $("s" + n).querySelector("h2");
+  h.focus({ preventScroll: true });
+  $("s" + n).scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+}
+
 function readControls() {
   profile = { fs: Number($("fs").value), ez: $("ez").checked, hc: $("hc").checked, vo: $("vo").checked, st: $("st").checked, tm: $("tm").checked };
 }
@@ -99,14 +149,22 @@ function refresh() {
   $("qr").src = `/api/qr?url=${encodeURIComponent(url)}`;
   $("link").textContent = url;
   $("go").href = `/kiosk.html?p=${encodeProfile(profile)}${testSuffix}`;
-  $("trlink").href = `/transform.html?p=${encodeProfile(profile)}`;   // 지금 만든 프로필을 변환 체험에 이어 준다
+  $("trlink").href = `/transform.html?p=${encodeProfile(profile)}`;   // 지금 만든 설정을 변환 체험에 이어 준다
 }
 for (const id of ["fs", "ez", "hc", "vo", "st", "tm"]) $(id).addEventListener("change", () => { readControls(); refresh(); });
 
+// 자주 쓰는 말: 누르면 입력칸 끝에 붙인다
+document.querySelectorAll(".chips button").forEach((b) => b.addEventListener("click", () => {
+  const t = b.dataset.say, cur = $("say").value.trim();
+  if (cur.includes(t)) return;
+  $("say").value = cur ? `${cur}, ${t}` : t;
+  $("say").focus();
+}));
+
 $("ai").addEventListener("click", async () => {
   const text = $("say").value.trim();
-  if (!text) return;
-  $("ai").disabled = true;
+  if (!text) { $("status1").textContent = "먼저 원하는 화면 방식을 말씀하거나 아래 버튼을 눌러 주세요."; $("say").focus(); return; }
+  $("ai").disabled = true; $("status1").textContent = "AI가 설정하는 중이에요…";
   try {
     const r = await fetch("/api/profile/parse", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
     const j = await r.json();
@@ -114,10 +172,47 @@ $("ai").addEventListener("click", async () => {
     writeControls(); refresh();
     $("src").hidden = false;
     $("src").textContent = j.source === "ai" ? "AI가 설정했어요" : "기본 규칙으로 설정했어요 (AI 키 없음)";
+    $("status1").textContent = "";
+    go(2);
+  } catch {
+    $("status1").textContent = "연결에 문제가 있어요. 잠시 뒤 다시 눌러 주세요.";
   } finally {
     $("ai").disabled = false;
   }
 });
+$("skip").addEventListener("click", () => { $("src").hidden = true; go(2); });
+$("back2").addEventListener("click", () => go(1));
+$("next2").addEventListener("click", () => { readControls(); refresh(); go(3); });
+$("again").addEventListener("click", () => go(1));
+
+// ---- 🎤 음성 입력 (브라우저 음성인식) ----
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (!SR) {
+  $("mic").hidden = true;
+  $("micnote").textContent = "이 브라우저는 앱 안의 음성 입력을 지원하지 않아요. 휴대폰 키보드의 마이크 버튼으로 말해서 입력할 수 있어요.";
+} else {
+  $("micprivacy").hidden = false;
+  let rec = null, listening = false;
+  const stopUi = () => { listening = false; $("mic").setAttribute("aria-pressed", "false"); $("mic").textContent = "🎤 말로 입력"; };
+  $("mic").addEventListener("click", () => {
+    if (listening) { rec.stop(); return; }
+    rec = new SR();
+    rec.lang = "ko-KR"; rec.interimResults = false; rec.maxAlternatives = 1;
+    rec.onresult = (e) => {
+      const t = e.results[0][0].transcript.trim();
+      if (t) $("say").value = ($("say").value.trim() + " " + t).trim();
+      $("status1").textContent = "들은 내용을 입력칸에 넣었어요. 맞는지 확인하고 'AI로 설정하기'를 눌러 주세요.";
+    };
+    rec.onerror = (e) => {
+      $("status1").textContent = e.error === "not-allowed" ? "마이크 사용을 허용해 주세요. (주소창 왼쪽 자물쇠 → 마이크 허용)"
+        : e.error === "no-speech" ? "말씀이 들리지 않았어요. 다시 눌러 말씀해 주세요." : "음성 입력에 문제가 있어요. 글자로 입력해 주세요.";
+    };
+    rec.onend = stopUi;
+    try { rec.start(); listening = true; $("mic").setAttribute("aria-pressed", "true"); $("mic").textContent = "⏹ 듣는 중… (누르면 멈춤)"; $("status1").textContent = "말씀해 주세요."; }
+    catch { stopUi(); }
+  });
+}
+
 writeControls(); refresh();
 </script>
 </body>
