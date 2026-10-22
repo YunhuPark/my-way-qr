@@ -3,103 +3,235 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>내 방식 QR - 내 화면 설정 만들기</title>
+<title>내 방식 QR - 키오스크가 내 방식으로 바뀝니다</title>
+<meta name="description" content="내가 편한 화면 방식을 QR 하나에 담아, 키오스크를 큰 글씨·쉬운 말·한 번에 하나씩으로 바꿔 주는 서비스. 병명·장애 종류는 묻지 않고 화면 선호만 전달합니다.">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/landing.css">
+<script>document.documentElement.classList.add("js");</script>
 </head>
-<body>
-<header class="site">
-  <h1>내 방식 QR</h1>
-  <p>내가 편한 화면 방식을 QR 하나에 담아, 키오스크를 내 방식으로 바꿔 보세요.</p>
+<body class="landing-body">
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="/" aria-label="내 방식 QR 처음으로">
+      <svg class="logo" viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#3b2fd9"/><g fill="#fff"><rect x="6" y="6" width="8" height="8" rx="2"/><rect x="18" y="6" width="8" height="8" rx="2" opacity=".55"/><rect x="6" y="18" width="8" height="8" rx="2" opacity=".55"/><rect x="18" y="18" width="3.4" height="3.4" rx="1"/><rect x="22.6" y="18" width="3.4" height="3.4" rx="1"/><rect x="18" y="22.6" width="3.4" height="3.4" rx="1"/><rect x="22.6" y="22.6" width="3.4" height="3.4" rx="1" fill="#ffd166"/></g></svg>
+      <span class="brand-name">내 방식 <b>QR</b></span>
+    </a>
+    <nav class="topnav" aria-label="주요 메뉴">
+      <a href="#how">쓰는 법</a>
+      <a href="#who">누구에게</a>
+      <a href="/transform.html" id="navtr">AI 화면 변환</a>
+      <a class="nav-cta" href="#maker">내 화면 만들기</a>
+    </nav>
+  </div>
+  <p class="testbadge" id="testbadge" hidden></p>
 </header>
-<main>
-  <section class="compare" aria-label="기존 키오스크 화면과 내 방식 화면 비교">
-    <div class="cmp bad">
-      <span class="tag">기존 키오스크</span>
-      <div class="mini" aria-hidden="true">수령 방식을 선택하십시오.<br><span class="b">매장 내 취식</span><span class="b">포장(테이크아웃)</span>
-        <div class="clock">⏱ 30초 후 처음 화면으로 돌아갑니다</div></div>
-      <p class="cap">작은 글씨, 어려운 말, 짧은 제한 시간</p>
-    </div>
-    <div class="cmp good">
-      <span class="tag">내 방식</span>
-      <div class="mini" aria-hidden="true">어디서 드시나요?<span class="b">여기서 먹기</span><span class="b">가져가기</span></div>
-      <p class="cap">큰 글씨, 쉬운 말, 한 번에 하나씩</p>
-    </div>
-  </section>
 
-  <nav class="stepper" aria-label="진행 단계">
-    <ol>
-      <li class="on" aria-current="step">1 말하기</li>
-      <li>2 확인하기</li>
-      <li>3 내 QR</li>
+<main class="landing">
+
+<!-- ───────── 히어로 ───────── -->
+<section class="hero" aria-labelledby="h-hero">
+  <div class="hero-in">
+    <div class="hero-copy">
+      <p class="eyebrow">범용 접근성 프로필 패스</p>
+      <h1 id="h-hero">키오스크가<br><em>내 방식</em>으로 바뀝니다</h1>
+      <p class="lead">큰 글씨, 쉬운 말, 한 번에 하나씩. 내가 편한 화면 방식을 QR 하나에 담아 두면, 키오스크 앞에서 매번 도움을 청하지 않아도 됩니다.</p>
+      <div class="cta-row">
+        <a class="btn-xl primary" href="#maker">내 화면 만들기 →</a>
+        <a class="btn-xl ghost" href="/transform.html" id="herotr">AI 화면 변환 보기</a>
+      </div>
+      <ul class="trust" aria-label="특징">
+        <li><b>병명·장애 종류</b>는 묻지 않아요</li>
+        <li>설정은 <b>서버에 저장하지 않아요</b></li>
+      </ul>
+    </div>
+
+    <div class="stage" aria-label="기존 화면과 내 방식 화면 비교">
+      <div class="phone" id="phone" data-state="plain">
+        <div class="phone-top" aria-hidden="true"><span></span></div>
+        <div class="phone-screen">
+          <div class="st st-plain" aria-hidden="true">
+            <p class="chip bad">기존 키오스크</p>
+            <p class="t">수령 방식을 선택하십시오.</p>
+            <p class="o">매장 내 취식</p><p class="o">포장(테이크아웃)</p>
+            <p class="clock">⏱ 30초 후 처음 화면으로 돌아갑니다</p>
+          </div>
+          <div class="st st-mine">
+            <p class="chip good">내 방식</p>
+            <p class="t">어디서 드시나요?</p>
+            <p class="o">여기서 먹기</p><p class="o">가져가기</p>
+            <div class="bar" aria-hidden="true"><span></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="seg" role="group" aria-label="화면 비교 보기">
+        <button type="button" id="segPlain" aria-pressed="true">기존 화면</button>
+        <button type="button" id="segMine" aria-pressed="false">내 방식 화면</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── 왜 ───────── -->
+<section class="sec why" aria-labelledby="h-why">
+  <div class="in narrow">
+    <h2 id="h-why">키오스크는 <span class="mark">평균적인 사람</span>에게 맞춰져 있어요</h2>
+    <p class="sub">글씨가 작고, 말이 어렵고, 시간이 짧으면 고령층, 장애인, 일시적으로 다친 분, 한국어가 서툰 분은 매번 도움을 청해야 합니다. 그렇다고 장애를 증명하라고 할 수도 없어요.</p>
+    <p class="sub strong">그래서 <b>"어떤 병이냐"가 아니라 "어떤 화면이 편하냐"</b>만 전달합니다.</p>
+  </div>
+</section>
+
+<!-- ───────── 쓰는 법 ───────── -->
+<section class="sec alt" id="how" aria-labelledby="h-how">
+  <div class="in">
+    <h2 id="h-how">세 단계로 끝나요</h2>
+    <ol class="steps3">
+      <li class="reveal"><span class="ico" aria-hidden="true">🗣️</span><h3>말하거나 눌러서 정해요</h3><p>"글씨는 크게, 어려운 말은 쉽게"처럼 말로 하거나, 자주 쓰는 말 버튼을 누르면 AI가 설정으로 바꿔 줘요.</p></li>
+      <li class="reveal"><span class="ico" aria-hidden="true">✅</span><h3>미리 보고 고쳐요</h3><p>글자 크기, 쉬운 말, 또렷한 화면, 소리, 한 단계씩, 넉넉한 시간. 6가지 설정을 미리 보고 직접 바꿀 수 있어요.</p></li>
+      <li class="reveal"><span class="ico" aria-hidden="true">📱</span><h3>QR로 열어요</h3><p>만들어진 QR을 휴대폰 카메라로 찍으면 같은 설정으로 화면이 바뀌어요.</p></li>
     </ol>
-  </nav>
+  </div>
+</section>
 
-  <!-- 1단계: 말하기 -->
-  <section class="card" id="s1" aria-labelledby="h-say">
-    <h2 id="h-say" tabindex="-1">화면이 어떻게 보이면 편하세요?</h2>
-    <label class="sr-only" for="say">원하는 화면 방식</label>
-    <textarea id="say" placeholder="예) 글씨는 크게, 어려운 말은 쉽게 바꿔 주세요. 천천히 하나씩 보고 싶어요."></textarea>
-    <div class="chips" role="group" aria-label="자주 쓰는 말 (누르면 입력칸에 추가)">
-      <button type="button" data-say="글씨는 크게">글씨 크게</button>
-      <button type="button" data-say="어려운 말은 쉽게">쉬운 말로</button>
-      <button type="button" data-say="글씨가 또렷하게">또렷하게</button>
-      <button type="button" data-say="소리로 읽어 주세요">소리로 읽기</button>
-      <button type="button" data-say="한 번에 하나씩">하나씩</button>
-      <button type="button" data-say="천천히 할 수 있게">천천히</button>
-    </div>
-    <div class="row">
-      <button class="mic" id="mic" type="button" aria-pressed="false">🎤 말로 입력</button>
-      <button class="primary" id="ai" type="button">AI로 설정하기 →</button>
-    </div>
-    <p class="hint" id="status1" role="status"></p>
-    <p class="row" style="margin-top:6px"><button type="button" id="skip">AI 없이 직접 고르기</button></p>
-    <p class="hint" id="micnote"></p>
-    <p class="hint">말씀하신 내용에서 <b>화면 선호</b>만 뽑아냅니다. 건강·장애 정보는 묻지도, 저장하지도 않습니다. 입력한 문장은 AI 처리를 위해 외부 AI 서비스로 전송될 수 있으니 이름·연락처 같은 개인정보는 적지 마세요.</p>
-    <p class="hint" id="micprivacy" hidden>🎤 음성 입력을 쓰면 말씀이 글자로 바뀌는 동안 <b>브라우저 회사(예: 구글, 애플)의 서버</b>로 전송될 수 있습니다.</p>
-  </section>
+<!-- ───────── 누구에게 ───────── -->
+<section class="sec" id="who" aria-labelledby="h-who">
+  <div class="in">
+    <h2 id="h-who">이런 분께 도움이 돼요</h2>
+    <p class="sub">각자 필요한 설정이 달라서, 하나씩 골라 조합해요.</p>
+    <ul class="people">
+      <li class="reveal"><span class="ico" aria-hidden="true">👓</span><h3>시력이 약한 분</h3><p>아주 큰 글씨, 또렷한 대비</p></li>
+      <li class="reveal"><span class="ico" aria-hidden="true">🤲</span><h3>손이 떨리거나 불편한 분</h3><p>큰 버튼, 넉넉한 시간, 한 번에 하나씩</p></li>
+      <li class="reveal"><span class="ico" aria-hidden="true">💡</span><h3>천천히 이해하고 싶은 분</h3><p>쉬운 말, 한 단계씩, 소리로 읽어 주기</p></li>
+      <li class="reveal"><span class="ico" aria-hidden="true">👂</span><h3>소리가 잘 안 들리는 분</h3><p>소리 없이 글자로 모두 확인</p></li>
+      <li class="reveal"><span class="ico" aria-hidden="true">🩹</span><h3>잠깐 다친 분</h3><p>한 손으로도 누르기 쉬운 큰 버튼</p></li>
+      <li class="reveal"><span class="ico" aria-hidden="true">🌏</span><h3>한국어가 서툰 분</h3><p>쉬운 한국어, 소리로 듣기</p></li>
+    </ul>
+  </div>
+</section>
 
-  <!-- 2단계: 확인하기 -->
-  <section class="card" id="s2" aria-labelledby="h-set" hidden>
-    <h2 id="h-set" tabindex="-1">이렇게 바뀌어요 <span class="badge" id="src" hidden></span></h2>
-    <label class="lab" for="fs">글자 크기</label>
-    <select id="fs">
-      <option value="1">보통</option>
-      <option value="1.4">크게</option>
-      <option value="1.8">아주 크게</option>
-      <option value="2.2">가장 크게</option>
-    </select>
-    <label class="opt"><input type="checkbox" id="ez"> 어려운 말을 쉬운 말로</label>
-    <label class="opt"><input type="checkbox" id="hc"> 글씨가 또렷하게 (고대비)</label>
-    <label class="opt"><input type="checkbox" id="vo"> 소리로 읽어 주기 (음성 안내)</label>
-    <label class="opt"><input type="checkbox" id="st"> 한 번에 한 단계씩 보기</label>
-    <label class="opt"><input type="checkbox" id="tm"> 넉넉한 시간 (제한 시간 연장)</label>
-    <h3 style="margin:18px 0 8px;font-size:1.05rem">미리보기</h3>
-    <div class="screen" id="pre" aria-live="polite">
-      <h3>본인 확인을 위해 신분증을 인식기에 접촉하십시오.</h3>
-      <div class="choices"><button class="choice" aria-pressed="true">신분증 인식 시작</button><button class="choice" aria-pressed="false">지문 인증으로 대체</button></div>
+<!-- ───────── AI 화면 변환 ───────── -->
+<section class="sec dark" aria-labelledby="h-ai">
+  <div class="in two">
+    <div>
+      <p class="eyebrow">처음 보는 키오스크도</p>
+      <h2 id="h-ai">AI가 화면을 <em>직접 바꿔 줘요</em></h2>
+      <p class="sub">키오스크의 질문과 선택지를 붙여넣으면, AI가 내 방식에 맞게 다시 만들어요. 그리고 AI가 틀릴 수 있다는 전제로 안전장치를 함께 둬요.</p>
+      <a class="btn-xl primary light" href="/transform.html" id="aitr">AI 화면 변환 해 보기 →</a>
     </div>
-    <div class="row">
-      <button type="button" id="back2">← 다시 말하기</button>
-      <button class="primary" type="button" id="next2">QR 만들기 →</button>
-    </div>
-  </section>
+    <ul class="checks">
+      <li><b>단계 나누기</b><span>한 화면의 여러 질문을 하나씩</span></li>
+      <li><b>쉬운 말</b><span>뜻은 그대로, 문장은 짧게</span></li>
+      <li><b>직원 도움 표시</b><span>현금처럼 화면만으론 어려운 선택</span></li>
+      <li><b>숫자 검사</b><span>가격·수량이 바뀌면 사용 차단</span></li>
+      <li><b>원문 확인</b><span>결제 전에 원문과 나란히 다시 확인</span></li>
+    </ul>
+  </div>
+</section>
 
-  <!-- 3단계: 내 QR -->
-  <section class="card qrbox" id="s3" aria-labelledby="h-qr" hidden>
-    <h2 id="h-qr" tabindex="-1">내 QR이 만들어졌어요</h2>
-    <img id="qr" alt="내 방식 QR 코드. 휴대폰 카메라로 찍으면 키오스크 체험 화면으로 연결됩니다.">
-    <p class="hint" style="margin-top:10px">휴대폰 카메라로 찍으면 같은 설정으로 열립니다.<span id="wifi" hidden> (내 PC에서 실행 중일 때는 PC와 같은 Wi-Fi여야 합니다.)</span></p>
-    <div class="row" style="justify-content:center">
-      <a class="btn" id="go" href="#"><button class="primary" type="button">이 설정으로 키오스크 체험</button></a>
-    </div>
-    <hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
-    <h3 style="margin:0 0 6px;font-size:1.1rem">어떤 키오스크든 AI로 바꿔 보기</h3>
-    <p class="hint" style="margin-top:0">실제 키오스크 화면의 질문·선택지를 붙여넣으면, AI가 단계로 나누고 쉬운 말로 바꿉니다. 결제 전에는 원문과 대조해 확인합니다.</p>
-    <div class="row" style="justify-content:center"><a class="btn" id="trlink" href="/transform.html"><button type="button">AI 화면 변환 해 보기</button></a></div>
-    <p class="row" style="justify-content:center"><button type="button" id="again">← 설정 다시 하기</button></p>
-    <code id="link"></code>
-  </section>
+<!-- ───────── 지금 만들기 ───────── -->
+<section class="sec maker" id="maker" aria-labelledby="h-maker">
+  <div class="in narrow">
+    <h2 id="h-maker">지금 내 화면 설정을 만들어 보세요</h2>
+    <p class="sub">1분이면 돼요. 가입도 필요 없어요.</p>
+
+    <nav class="stepper" aria-label="진행 단계">
+      <ol>
+        <li class="on" aria-current="step">1 말하기</li>
+        <li>2 확인하기</li>
+        <li>3 내 QR</li>
+      </ol>
+    </nav>
+
+    <!-- 1단계: 말하기 -->
+    <section class="card" id="s1" aria-labelledby="h-say">
+      <h3 id="h-say" tabindex="-1">화면이 어떻게 보이면 편하세요?</h3>
+      <label class="sr-only" for="say">원하는 화면 방식</label>
+      <textarea id="say" placeholder="예) 글씨는 크게, 어려운 말은 쉽게 바꿔 주세요. 천천히 하나씩 보고 싶어요."></textarea>
+      <div class="chips" role="group" aria-label="자주 쓰는 말 (누르면 입력칸에 추가)">
+        <button type="button" data-say="글씨는 크게">글씨 크게</button>
+        <button type="button" data-say="어려운 말은 쉽게">쉬운 말로</button>
+        <button type="button" data-say="글씨가 또렷하게">또렷하게</button>
+        <button type="button" data-say="소리로 읽어 주세요">소리로 읽기</button>
+        <button type="button" data-say="한 번에 하나씩">하나씩</button>
+        <button type="button" data-say="천천히 할 수 있게">천천히</button>
+      </div>
+      <div class="row">
+        <button class="mic" id="mic" type="button" aria-pressed="false">🎤 말로 입력</button>
+        <button class="primary" id="ai" type="button">AI로 설정하기 →</button>
+      </div>
+      <p class="hint" id="status1" role="status"></p>
+      <p class="row" style="margin-top:6px"><button type="button" id="skip">AI 없이 직접 고르기</button></p>
+      <p class="hint" id="micnote"></p>
+      <p class="hint">말씀하신 내용에서 <b>화면 선호</b>만 뽑아냅니다. 건강·장애 정보는 묻지도, 저장하지도 않습니다. 입력한 문장은 AI 처리를 위해 외부 AI 서비스로 전송될 수 있으니 이름·연락처 같은 개인정보는 적지 마세요.</p>
+      <p class="hint" id="micprivacy" hidden>🎤 음성 입력을 쓰면 말씀이 글자로 바뀌는 동안 <b>브라우저 회사(예: 구글, 애플)의 서버</b>로 전송될 수 있습니다.</p>
+    </section>
+
+    <!-- 2단계: 확인하기 -->
+    <section class="card" id="s2" aria-labelledby="h-set" hidden>
+      <h3 id="h-set" tabindex="-1">이렇게 바뀌어요 <span class="badge" id="src" hidden></span></h3>
+      <label class="lab" for="fs">글자 크기</label>
+      <select id="fs">
+        <option value="1">보통</option>
+        <option value="1.4">크게</option>
+        <option value="1.8">아주 크게</option>
+        <option value="2.2">가장 크게</option>
+      </select>
+      <label class="opt"><input type="checkbox" id="ez"> 어려운 말을 쉬운 말로</label>
+      <label class="opt"><input type="checkbox" id="hc"> 글씨가 또렷하게 (고대비)</label>
+      <label class="opt"><input type="checkbox" id="vo"> 소리로 읽어 주기 (음성 안내)</label>
+      <label class="opt"><input type="checkbox" id="st"> 한 번에 한 단계씩 보기</label>
+      <label class="opt"><input type="checkbox" id="tm"> 넉넉한 시간 (제한 시간 연장)</label>
+      <h4 style="margin:18px 0 8px;font-size:1.05rem">미리보기</h4>
+      <div class="screen" id="pre" aria-live="polite">
+        <h3>본인 확인을 위해 신분증을 인식기에 접촉하십시오.</h3>
+        <div class="choices"><button class="choice" aria-pressed="true">신분증 인식 시작</button><button class="choice" aria-pressed="false">지문 인증으로 대체</button></div>
+      </div>
+      <div class="row">
+        <button type="button" id="back2">← 다시 말하기</button>
+        <button class="primary" type="button" id="next2">QR 만들기 →</button>
+      </div>
+    </section>
+
+    <!-- 3단계: 내 QR -->
+    <section class="card qrbox" id="s3" aria-labelledby="h-qr" hidden>
+      <h3 id="h-qr" tabindex="-1">내 QR이 만들어졌어요</h3>
+      <img id="qr" alt="내 방식 QR 코드. 휴대폰 카메라로 찍으면 키오스크 체험 화면으로 연결됩니다.">
+      <p class="hint" style="margin-top:10px">휴대폰 카메라로 찍으면 같은 설정으로 열립니다.<span id="wifi" hidden> (내 PC에서 실행 중일 때는 PC와 같은 Wi-Fi여야 합니다.)</span></p>
+      <div class="row" style="justify-content:center">
+        <a class="btn" id="go" href="#"><button class="primary" type="button">이 설정으로 키오스크 체험</button></a>
+      </div>
+      <hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
+      <h4 style="margin:0 0 6px;font-size:1.1rem">어떤 키오스크든 AI로 바꿔 보기</h4>
+      <p class="hint" style="margin-top:0">실제 키오스크 화면의 질문·선택지를 붙여넣으면, AI가 단계로 나누고 쉬운 말로 바꿉니다. 결제 전에는 원문과 대조해 확인합니다.</p>
+      <div class="row" style="justify-content:center"><a class="btn" id="trlink" href="/transform.html"><button type="button">AI 화면 변환 해 보기</button></a></div>
+      <p class="row" style="justify-content:center"><button type="button" id="again">← 설정 다시 하기</button></p>
+      <code id="link"></code>
+    </section>
+  </div>
+</section>
+
+<!-- ───────── 안전 ───────── -->
+<section class="sec alt" aria-labelledby="h-safe">
+  <div class="in">
+    <h2 id="h-safe">안전하게 만들었어요</h2>
+    <ul class="safe">
+      <li class="reveal"><h3>선호 설정만 담아요</h3><p>QR에는 글자 크기 같은 화면 선호만 들어 있어요. 병명·장애 종류나 이름은 담지 않아요.</p></li>
+      <li class="reveal"><h3>서버에 저장하지 않아요</h3><p>설정은 주소(QR) 안에만 있어요. 우리 서버에 보관하지 않아요.</p></li>
+      <li class="reveal"><h3>AI가 틀려도 안전하게</h3><p>가격 같은 숫자가 바뀌면 쓸 수 없게 막고, 결제 전에는 원문과 함께 다시 확인해요.</p></li>
+    </ul>
+  </div>
+</section>
+
 </main>
+
+<footer class="foot">
+  <div class="in">
+    <p><b>내 방식 QR</b> · AI 라이프 솔루션 챌린지 출품작</p>
+    <p class="hint">시연용 모의 화면입니다. 실제 결제·발급은 되지 않아요. 입력한 문장은 AI 처리를 위해 외부 AI 서비스로 전송될 수 있어요.</p>
+  </div>
+</footer>
 
 <script src="/profile.js"></script>
 <script>
@@ -111,7 +243,7 @@ let base = location.origin;
 const qs = new URLSearchParams(location.search);
 const testPid = (qs.get("pid") || "P1").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 10) || "P1";
 const testSuffix = qs.get("test") === "1" ? `&test=1&pid=${testPid}` : "";
-if (testSuffix) document.querySelector("header.site p").textContent += ` [테스트 모드: 참가자 ${testPid}]`;
+if (testSuffix) { $("testbadge").hidden = false; $("testbadge").textContent = `테스트 모드: 참가자 ${testPid}`; }
 
 fetch("/api/base").then(r => r.json()).then(j => {
   base = j.base;
@@ -121,6 +253,27 @@ fetch("/api/base").then(r => r.json()).then(j => {
   refresh();
 }).catch(() => {});
 
+// ---- 히어로: 기존 화면 ↔ 내 방식 화면 ----
+const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let auto = !reduce, autoTimer = null;
+function setState(s) {
+  $("phone").dataset.state = s;
+  $("segPlain").setAttribute("aria-pressed", String(s === "plain"));
+  $("segMine").setAttribute("aria-pressed", String(s === "mine"));
+}
+function stopAuto() { auto = false; clearInterval(autoTimer); }
+$("segPlain").addEventListener("click", () => { stopAuto(); setState("plain"); });
+$("segMine").addEventListener("click", () => { stopAuto(); setState("mine"); });
+if (auto) autoTimer = setInterval(() => setState($("phone").dataset.state === "plain" ? "mine" : "plain"), 3200);
+
+// ---- 스크롤 등장 (움직임 줄이기 설정이면 바로 보임) ----
+if (!reduce && "IntersectionObserver" in window) {
+  const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in-view"); io.unobserve(e.target); } }), { threshold: .15 });
+  document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+} else {
+  document.querySelectorAll(".reveal").forEach((el) => el.classList.add("in-view"));
+}
+
 // ---- 단계 이동 ----
 function go(n) {
   for (const i of [1, 2, 3]) $("s" + i).hidden = i !== n;
@@ -129,9 +282,9 @@ function go(n) {
     li.classList.toggle("done", idx + 1 < n);
     if (idx + 1 === n) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current");
   });
-  const h = $("s" + n).querySelector("h2");
+  const h = $("s" + n).querySelector("h3");
   h.focus({ preventScroll: true });
-  $("s" + n).scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+  $("s" + n).scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
 }
 
 function readControls() {
@@ -149,7 +302,8 @@ function refresh() {
   $("qr").src = `/api/qr?url=${encodeURIComponent(url)}`;
   $("link").textContent = url;
   $("go").href = `/kiosk.html?p=${encodeProfile(profile)}${testSuffix}`;
-  $("trlink").href = `/transform.html?p=${encodeProfile(profile)}`;   // 지금 만든 설정을 변환 체험에 이어 준다
+  const tr = `/transform.html?p=${encodeProfile(profile)}`;   // 지금 만든 설정을 변환 체험에 이어 준다
+  for (const id of ["trlink", "navtr", "herotr", "aitr"]) $(id).href = tr;
 }
 for (const id of ["fs", "ez", "hc", "vo", "st", "tm"]) $(id).addEventListener("change", () => { readControls(); refresh(); });
 

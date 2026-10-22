@@ -1,10 +1,10 @@
 :root {
   --bg: #f3f5fa; --card: #fff; --ink: #111827; --muted: #4b5563; --line: #cbd5e1;
-  --brand: #1d4ed8; --brand-ink: #fff; --brand-soft: #e8eefc; --ok: #137a3f; --warn: #92400e;
+  --brand: #3b2fd9; --brand-ink: #fff; --brand-soft: #ecebff; --sun: #ffd166; --night: #0b1020; --ok: #137a3f; --warn: #92400e;
 }
 * { box-sizing: border-box; }
 html { font-size: 112.5%; -webkit-text-size-adjust: 100%; }   /* 기본 18px: 접근성 서비스라 기본 글씨를 키움 */
-body { margin: 0; font-family: "Pretendard", "Malgun Gothic", system-ui, sans-serif; background: var(--bg); color: var(--ink); line-height: 1.6;
+body { margin: 0; font-family: "Pretendard Variable", Pretendard, "Malgun Gothic", system-ui, sans-serif; background: var(--bg); color: var(--ink); line-height: 1.6;
   -webkit-tap-highlight-color: transparent; padding-bottom: env(safe-area-inset-bottom); word-break: keep-all; overflow-wrap: anywhere; }
 
 /* ---- 공통 ---- */
@@ -21,7 +21,7 @@ button { font: inherit; cursor: pointer; border-radius: 12px; border: 2px solid 
 button.primary { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); font-weight: 700; }
 button:active { transform: scale(.98); }
 button:disabled { opacity: .55; cursor: not-allowed; }
-@media (hover: hover) { button:not(:disabled):hover { border-color: var(--brand); } button.primary:not(:disabled):hover { background: #1e40af; } }
+@media (hover: hover) { button:not(:disabled):hover { border-color: var(--brand); } button.primary:not(:disabled):hover { background: #2a20b8; } }
 button:focus-visible, a:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px solid #f59e0b; outline-offset: 2px; }
 .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
 @media (max-width: 560px) { main .row > button, main .row > a.btn { flex: 1 1 100%; } main .row > a.btn > button { width: 100%; } }
@@ -71,7 +71,7 @@ button.mic[aria-pressed="true"] { background: #fee2e2; border-color: #b91c1c; co
 .kiosk-top { display: flex; justify-content: space-between; align-items: center; color: #cbd5e1; font-size: .8rem; padding: 4px 12px 10px; }
 .kiosk-top .dots { letter-spacing: 3px; font-size: .6rem; }
 .kiosk-frame .screen { border: 0; border-radius: 18px; }
-.screen { --k-bg: #fff; --k-ink: #111827; --k-line: #94a3b8; --k-accent: #1d4ed8; --k-accent-ink: #fff;
+.screen { --k-bg: #fff; --k-ink: #111827; --k-line: #94a3b8; --k-accent: #3b2fd9; --k-accent-ink: #fff;
   font-size: calc(1rem * var(--fs, 1)); background: var(--k-bg); color: var(--k-ink); border: 2px solid var(--k-line); border-radius: 14px; padding: 1.1em; word-break: keep-all; overflow-wrap: anywhere; }
 .screen.hc { --k-bg: #000; --k-ink: #fff; --k-line: #fff; --k-accent: #ffe600; --k-accent-ink: #000; }
 .screen .timer { font-size: .8em; color: inherit; opacity: .85; margin-bottom: .6em; }
