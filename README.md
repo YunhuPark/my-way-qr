@@ -38,11 +38,10 @@ python -m pip install --target .\libs -r requirements.txt   # 처음 한 번
 | `app/static/kiosk.html` | 모의 키오스크(기본 화면 vs 내 방식 화면) |
 | `app/static/transform.html` | AI 화면 변환 |
 | `app/scenarios.json` | 키오스크 시나리오(카페·민원·병원)와 쉬운 말 사전 |
-| `tools/analyze.py` | 사용성 테스트 기록(CSV) 분석 |
-| `docs/` | 사용·테스트 진행 방법, 점검 메모 |
+| `docs/` | 사용 방법, 데모 GIF |
 
 ## 문서
-- 사용·테스트 진행 방법: [docs/usage-guide.md](docs/usage-guide.md)
+- 사용 방법: [docs/usage-guide.md](docs/usage-guide.md)
 - 배포 방법(Render): [DEPLOY.md](DEPLOY.md)
 
 ## 현재 상태와 한계
